@@ -1,6 +1,6 @@
-# Nuxt 3 Minimal Starter
+# Nuxt 3 Server Pokedex App
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A Pokedex Practice App using Nuxt 3 and Nuxt Server + Vue 3 + Tailwind CSS + PokeAPI
 
 ## Setup
 
