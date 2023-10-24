@@ -28,14 +28,14 @@
         <input
           v-model="pokemonInput"
           name="pokemon"
-          class="w-[15rem] block bg-white/50 rounded-md border-0 py-1.5 px-3 pr-12 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-slate-800 sm:text-sm sm:leading-6"
+          class="w-[15rem] block bg-white/50 rounded-md border-0 py-1.5 px-3 pr-12 text-gray-900 shadow-sm ring-1 ring-inset xl:text-xl ring-gray-300 placeholder:text-slate-800 sm:text-sm sm:leading-6"
           type="text"
           placeholder="Search Pokemon Name or ID"
           @keyup.enter="searchPokemon"
         />
         <button
           type="button"
-          class="rounded-md bg-white/50 px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-white/60"
+          class="rounded-md bg-white/50 px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset xl:text-xl ring-gray-300 hover:bg-white/60"
           @click.prevent="searchRandom"
         >
           Random
