@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex w-screen h-screen transition-all duration-500 bg-gradient-to-tl bg-size-200"
+    class="flex w-screen h-screen transition-all duration-500 bg-gradient-to-tl bg-size-200 overflow-hidden"
     :class="[ pokeColors[pokemon?.color ?? 'default'].gradient ]"
   >
     <div
@@ -26,14 +26,14 @@
         <input
           v-model="pokemonInput"
           name="pokemon"
-          class="w-[15rem] block bg-white/50 rounded-md border-0 py-1.5 px-3 pr-12 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-slate-800 sm:text-sm sm:leading-6"
+          class="w-[15rem] block bg-white/50 rounded-md border-0 py-1.5 px-3 pr-12 text-gray-900 shadow-sm ring-1 xl:text-xl ring-inset ring-gray-300 placeholder:text-slate-800 sm:text-sm sm:leading-6"
           type="text"
           placeholder="Search Pokemon Name or ID"
           @keyup.enter="searchPokemon"
         >
         <button
           type="button"
-          class="rounded-md bg-white/50 px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-white/60"
+          class="rounded-md bg-white/50 px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 xl:text-xl ring-inset ring-gray-300 hover:bg-white/60"
           @click.prevent="searchRandom"
         >
           Random
@@ -99,16 +99,6 @@ onMounted(async () => {
   searchRandom();
 });
 
-const getRandomNumber = () => {
-  const range1 = Math.floor(Math.random() * (1017 - 1 + 1)) + 1; // Random number between 1 and 1000
-  const range2 = Math.floor(Math.random() * (10292 - 10001 + 1)) + 10000; // Random number between 10000 and 10227
-
-  // Randomly choose between the two ranges
-  const isRange1 = Math.random() < 0.9;
-  
-  return isRange1 ? range1 : range2;
-};
-
 const searchRandom = async () => {
   const randomPokemonNumber = getRandomNumber();
   pokemonInput.value = randomPokemonNumber;
@@ -132,11 +122,5 @@ const searchPokemon = async () => {
 
     isSearching.value = false;
   }, 500);
-};
-
-const transformInput = (input) => {
-  const lowercased = input.toLowerCase();
-  const kebabCased = lowercased.replace(/[^a-z0-9]+/g, '-');
-  return kebabCased.replace(/^-+|-+$/g, '');
 };
 </script>
