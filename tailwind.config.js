@@ -47,9 +47,9 @@ export default {
             dark: colors.neutral["800"],
           },
           pokewhite: {
-            DEFAULT: colors.slate["100"],
+            DEFAULT: colors.stone["100"],
             light: colors.white,
-            dark: colors.slate["400"],
+            dark: colors.stone["200"],
           },
           pokepink: {
             DEFAULT: colors.pink["500"],
@@ -59,7 +59,14 @@ export default {
         },
         dropShadow: {
           light: '8px 8px rgba(226, 232, 240, 0.4)',
-        }
+        },
+        backgroundSize: {
+          'size-200': '200% 200%',
+        },
+        backgroundPosition: {
+          'pos-0': '0% 0%',
+          'pos-100': '100% 100%',
+        },
       },
     },
     plugins: [],
