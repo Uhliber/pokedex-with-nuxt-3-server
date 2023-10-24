@@ -2,6 +2,8 @@
 
 A Pokedex Practice App using Nuxt 3 and Nuxt Server + Vue 3 + Tailwind CSS + PokeAPI
 
+PokeAPI - https://pokeapi.co/
+
 ## Demo
 
 https://uhliber-pokedex.netlify.app
