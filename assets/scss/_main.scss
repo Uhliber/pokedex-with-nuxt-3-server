@@ -110,6 +110,15 @@ body {
   animation-fill-mode: forwards;
 }
 
+.floating-holo-card {
+	transform: translateY(0px);
+	animation: float 6s ease-in-out infinite;
+}
+
+.floating-holo-card:hover {
+  animation-play-state: paused;
+}
+
 @keyframes intro-opacity {
   100% {
     opacity: 1;
@@ -143,4 +152,16 @@ body {
   100%{
     transform: rotate(360deg);
   }
+}
+
+@keyframes float {
+	0% {
+		transform: translatey(0px);
+	}
+	50% {
+		transform: translatey(-20px);
+	}
+	100% {
+		transform: translatey(0px);
+	}
 }

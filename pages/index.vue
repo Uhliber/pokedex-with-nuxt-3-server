@@ -39,7 +39,10 @@
           Random
         </button>
       </div>
-      <div class="pointer-event-none">
+      <div
+        v-if="pokemon"
+        class="pointer-event-none"
+      >
         <h1
           class="absolute top-4 font-bebas w-full overflow-hidden text-white/10 text-[18vw] leading-[0.8]"
           style="height: calc(100% - 32px);"
@@ -48,19 +51,49 @@
         </h1>
         <div class="relative z-50">
           <h1
-            class="mt-[7rem] font-bebas w-full text-[10vw] leading-[0.8] drop-shadow-light"
+            class="-intro-x mt-[7rem] font-bebas w-full text-[10vw] leading-[0.8] drop-shadow-light"
             :class="[ pokeColors[pokemon?.color ?? 'default'].dark ]"
           >
             {{ pokemon?.name }}
           </h1>
           <p
             v-if="pokemon"
-            class="font-bebas -mt-[1.5rem] text-[4vw] text-neutral-800"
+            class="-intro-x font-bebas -mt-[1.5rem] text-[4vw] text-neutral-800"
           >
             #{{ pokemon?.id }}
           </p>
+          <div>
+            <Teleport to="body">
+              <HoloCardOverlay
+                :show="showHoloCard && !!selectedHoloImage"
+                :card-image="selectedHoloImage?.images?.large"
+                @click-outside="handleHoloImageClose"
+              />
+            </Teleport>
+          </div>
         </div>
-        <div class="z-10 fixed pointer-events-none h-full max-w-4xl bottom-0 right-0 pt-6 scale-125">
+        <div
+          v-if="holoImages?.length"
+          class="absolute -bottom-4 -left-4"
+        >
+          <h1
+            class="pl-10 pb-10 uppercase font-black"
+            :class="[ pokeColors[pokemon?.color ?? 'default'].dark ]"
+          >
+            Featured Cards
+          </h1>
+          <div class=" flex gap-4">
+            <img
+              v-for="(holoImage, index) in holoImages"
+              :key="holoImage.id"
+              class="w-28 z-holo shadow-md rounded-sm floating-holo-card cursor-pointer"
+              :src="holoImage?.images?.small"
+              @click="handleHoloImageClick(holoImage)"
+              :style="{'animation-delay': `${500 + (500 * (index + 1))}ms`}"
+            >
+          </div>
+        </div>
+        <div class="fixed z-main-pokemon pointer-events-none h-full max-w-4xl bottom-0 right-0 pt-6 scale-125">
           <img
             v-if="pokemon"
             :src="pokemon.image"
@@ -69,6 +102,14 @@
             :class="[{'brightness-0': !pokemon.hasImage}]"
           >
         </div>
+      </div>
+      <div v-if="notFound">
+        <h1
+          class="absolute top-4 font-bebas w-full overflow-hidden text-neutral-700/70 text-[18vw] leading-[0.8]"
+          style="height: calc(100% - 32px);"
+        >
+          NOT FOUND!
+        </h1>
       </div>
     </div>
   </div>
@@ -79,6 +120,9 @@ const pokemonInput = ref('');
 const pokemon = ref(null);
 const isSearching = ref(false);
 const notFound = ref(false);
+const holoImages = ref(null);
+const showHoloCard = ref(false);
+const selectedHoloImage = ref(null);
 
 const pokeColors = {
   black: { default: 'bg-pokeblack', light: 'bg-pokeblack-light/50', gradient: 'from-pokeblack-dark via-neutral-700 to-neutral-900 bg-pos-100', dark: 'text-pokeblack-dark' },
@@ -107,20 +151,51 @@ const searchRandom = async () => {
 
 const searchPokemon = async () => {
   pokemon.value = null;
+  holoImages.value = null;
   isSearching.value = true;
   notFound.value = false;
 
-  const transformedInput = transformInput(`${pokemonInput.value}`);
-  const { data, error } = await useFetch(`/api/${transformedInput}`);
-
-  await setTimeout(() => {
-    pokemon.value = data.value;
-
-    if (error.value) {
-      notFound.value = true;
+  try {
+    const transformedInput = transformInput(`${pokemonInput.value}`);
+    const { data } = await useFetch(`/api/${transformedInput}`);
+    if (data.value.tradingCard.length > 3) {
+      const [topCard, ...rest] = data.value.tradingCard;
+      const shuffled = shuffleCards(rest);
+      holoImages.value = [
+        topCard,
+        shuffled[0],
+        shuffled[1],
+      ];
+    } else {
+      holoImages.value = data.value.tradingCard;
     }
-
+    pokemon.value = data.value;
+  } catch (error) {
+    notFound.value = true;
+  } finally {
     isSearching.value = false;
-  }, 500);
+  }
 };
+
+function handleHoloImageClick (holoImage) {
+  selectedHoloImage.value = holoImage;
+  showHoloCard.value = true;
+}
+
+function handleHoloImageClose () {
+  selectedHoloImage.value = null;
+  showHoloCard.value = false;
+}
+
+function shuffleCards (array) {
+  const newArray = [...array]; // Create a shallow copy of the original array
+
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    // Swap newArray[i] and newArray[j]
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+
+  return newArray;
+}
 </script>
