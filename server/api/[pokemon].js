@@ -50,7 +50,13 @@ export default defineEventHandler(async event => {
       if (response.name.toLowerCase().includes('gmax')) {
         responseName = `${responseName}*vmax`;
       }
+
+      if (response.name.toLowerCase().includes('galar')) {
+        responseName = `galarian*${responseName}*`;
+      }
+
     } else {
+      responseName = responseName.replace('-', '*');
       responseName = `${responseName}%20-name:*vmax`;
     }
 
