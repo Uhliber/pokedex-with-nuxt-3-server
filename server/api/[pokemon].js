@@ -1,37 +1,43 @@
-const cardRarityOrder = {
-  'Amazing Rare': 0,
-  'Illustration Rare': 1,
-  'LEGEND': 2,
-  'Rare Holo VSTAR': 3,
-  'Rare Holo VMAX': 4,
-  'Rare Shiny GX': 5,
-  'Rare Rainbow': 6,
-  'Rare Secret': 7,
-  'Hyper Rare': 8,
-  'Special Illustration Rare': 9,
-  'Trainer Gallery Rare Holo': 10,
-  'Rare Holo GX': 11,
-  'Rare Holo EX': 12,
-  'Rare Holo LV.X': 13,
-  'Rare Holo Star': 14,
-  'Rare Holo V': 15,
-  'Rare Holo': 16,
-  'Rare Prism Star': 17,
-  'Rare Shining': 18,
-  'Rare Shiny': 19,
-  'Rare Ultra': 20,
-  'Rare ACE': 21,
-  'Rare BREAK': 22,
-  'Rare Prime': 23,
-  'Radiant Rare': 24,
-  'Ultra Rare': 25,
-  'Double Rare': 26,
-  'Rare': 27,
-  'Common': 28,
-  'Uncommon': 29,
-  'Classic Collection': 30,
-  'Promo': 31,
-};
+const cardRarityArray = [
+  'Amazing Rare',
+  'Illustration Rare',
+  'Rare Holo VSTAR',
+  'Rare Holo VMAX',
+  'Rare Shiny GX',
+  'Rare Rainbow',
+  'Rare Secret',
+  'Hyper Rare',
+  'Special Illustration Rare',
+  'Trainer Gallery Rare Holo',
+  'Rare Holo GX',
+  'Rare Holo EX',
+  'Rare Holo LV.X',
+  'Rare Holo Star',
+  'Rare Holo V',
+  'Rare Holo',
+  'Rare Prism Star',
+  'Rare Shining',
+  'Rare Shiny',
+  'Rare Ultra',
+  'Rare ACE',
+  'Rare BREAK',
+  'Rare Prime',
+  'Radiant Rare',
+  'Ultra Rare',
+  'Double Rare',
+  'Rare',
+  'Common',
+  'Uncommon',
+  'Classic Collection',
+  'Promo',
+  'LEGEND',
+];
+
+const cardRarityOrder = {};
+
+cardRarityArray.forEach((value, index) => {
+  cardRarityOrder[value] = index;
+});
 
 export default defineEventHandler(async event => {
   try {
@@ -61,7 +67,7 @@ export default defineEventHandler(async event => {
     }
 
     const { data: cardResponse } = await $fetch(
-      `https://api.pokemontcg.io/v2/cards?q=name:${responseName}%20-rarity:Promo%20-rarity:Common&pageSize=100&select=id,name,rarity,images`,
+      `https://api.pokemontcg.io/v2/cards?q=name:${responseName}%20-rarity:Promo%20-rarity:Common%20-supertype:trainer%20-subtypes:tag&pageSize=100&select=id,name,rarity,images`,
     );
 
     if (cardResponse.length <= 3) {
