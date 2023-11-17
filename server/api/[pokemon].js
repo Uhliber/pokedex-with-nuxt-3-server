@@ -1,31 +1,31 @@
 const cardRarityArray = [
-  'Amazing Rare',
-  'Illustration Rare',
   'Rare Holo VSTAR',
-  'Rare Holo VMAX',
-  'Rare Shiny GX',
-  'Rare Rainbow',
-  'Rare Secret',
-  'Hyper Rare',
-  'Special Illustration Rare',
-  'Trainer Gallery Rare Holo',
-  'Rare Holo GX',
   'Rare Holo EX',
+  'Rare Holo GX',
   'Rare Holo LV.X',
-  'Rare Holo Star',
   'Rare Holo V',
+  'Rare Holo Star',
   'Rare Holo',
+  'Amazing Rare',
+  'Hyper Rare',
+  'Double Rare',
+  'Illustration Rare',
+  'Special Illustration Rare',
+  'Rare Secret',
   'Rare Prism Star',
-  'Rare Shining',
-  'Rare Shiny',
   'Rare Ultra',
   'Rare ACE',
   'Rare BREAK',
   'Rare Prime',
   'Radiant Rare',
   'Ultra Rare',
-  'Double Rare',
   'Rare',
+  'Rare Holo VMAX',
+  'Trainer Gallery Rare Holo',
+  'Rare Shining',
+  'Rare Shiny GX',
+  'Rare Shiny',
+  'Rare Rainbow',
   'Common',
   'Uncommon',
   'Classic Collection',
@@ -33,11 +33,63 @@ const cardRarityArray = [
   'LEGEND',
 ];
 
+const customQuery = {
+  'farfetchd': 'farfetch*d',
+  'nidoran-f': 'nidoran%20evolvesTo:nidorina',
+  'nidoran-m': 'nidoran%20evolvesTo:nidorino',
+  'slowking': 'slowking%20-types:darkness',
+  'castform': (name) => {
+    let nameNew = name;
+    switch (name) {
+      case 'castform-rainy':
+        nameNew = 'castform-rain';
+        break;
+      case 'castform-snowy':
+        nameNew = 'castform-snow';
+        break;
+    
+      default:
+        break;
+    }
+    
+    return `${reverseNameWithDash(nameNew)}`.replace('-', '*');
+  },
+  'rotom': (name) => {
+    return `${reverseNameWithDash(name)}`.replace('-', '*');
+  },
+};
+
+const getSpecieDefault = [
+  'eiscue-ice',
+  'enamorus-incarnate',
+  'basculegion-male',
+  'basculegion-female',
+  'minior-red-meteor',
+  'lycanroc-midday',
+  'wishiwashi-solo',
+  'meowstic-male',
+  'meowstic-female',
+];
+
 const cardRarityOrder = {};
+
+const ignoredSuffixes = [
+  'altered',
+];
 
 cardRarityArray.forEach((value, index) => {
   cardRarityOrder[value] = index;
 });
+
+function reverseNameWithDash (name) {
+  if (name.includes('-')) {
+    const substrings = name.split('-');
+    const reversedString = substrings.reverse().join('-');
+    return reversedString;
+  } else {
+    return name;
+  }
+}
 
 export default defineEventHandler(async event => {
   try {
@@ -47,23 +99,51 @@ export default defineEventHandler(async event => {
     );
 
     let responseName = response.name.toLowerCase();
+    const specieName = response.species.name;
     let tradingCards = [];
     let tradingCardsResponse = [];
 
-    if (!response.is_default) {
+    if (specieName in customQuery) {
+      if (typeof customQuery[specieName] === 'function') {
+        const customQueryFunc = customQuery[specieName];
+        responseName = customQueryFunc(responseName);
+      } else {
+        responseName = customQuery[specieName];
+      }
+    } else if (
+      ignoredSuffixes.some(ignore => responseName.includes(ignore))
+        || getSpecieDefault.some(p => responseName.includes(p))
+        || !response.is_default
+    ) {
       responseName = response.species.name;
 
       if (response.name.toLowerCase().includes('gmax')) {
         responseName = `${responseName}*vmax`;
       }
 
+      if (response.name.toLowerCase().includes('mega')) {
+        responseName = `M*${responseName}`;
+      }
+
       if (response.name.toLowerCase().includes('galar')) {
         responseName = `galarian*${responseName}*`;
       }
 
+      if (response.name.toLowerCase().includes('alola')) {
+        responseName = `alolan*${responseName}*`;
+      }
+
+      if (response.name.toLowerCase().includes('black')) {
+        responseName = `black*${responseName}*`;
+      }
+
+      if (response.name.toLowerCase().includes('white')) {
+        responseName = `white*${responseName}*`;
+      }
+
     } else {
       responseName = responseName.replace('-', '*');
-      responseName = `${responseName}%20-name:*vmax`;
+      responseName = `${responseName}%20-name:*vmax%20-name:galarian*`;
     }
 
     const { data: cardResponse } = await $fetch(
