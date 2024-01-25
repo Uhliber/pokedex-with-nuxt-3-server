@@ -90,15 +90,45 @@ watch(() => props.show, async (value) => {
 
     holoCard.value.addEventListener('mouseover', onHover);
     holoCard.value.addEventListener('mouseout', onOut);
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientationChange, false);
+    }
   }
-});
-
-onMounted(() => {
-
 });
 
 function handleClickOutside () {
   emit('click-outside');
+}
+
+function handleOrientationChange (event) {
+  if (event.beta !== null && event.gamma !== null) {
+    const rawBeta = event.beta || 0;
+    const rawGamma = -(event.gamma || 0);
+    
+    const maxRotation = 30;
+    const minRotation = -30;
+
+    const gamma = Math.min(maxRotation, Math.max(minRotation, rawGamma));
+
+    const initialBetaRotation = -40;
+    const beta = Math.min(40, Math.max(-40, rawBeta + initialBetaRotation));
+
+    const adjustedBeta = rawBeta > 90 ? 90 : rawBeta < -90 ? -90 : rawBeta;
+    const adjustedGamma = rawGamma > 90 ? 90 : rawGamma < -90 ? -90 : rawGamma;
+
+    const el = holoCard.value;
+
+    const convertedBeta = (adjustedBeta + 70) / 180 * 100;
+    const convertedGamma = (adjustedGamma + 70) / 180 * 100;
+
+    posLp.value = Math.abs(Math.floor(convertedGamma));
+    posTp.value = Math.abs(Math.floor(convertedBeta));
+
+    el.classList.remove('active');
+    el.classList.add('active');
+    el.style.transform = `rotateX(${beta}deg) rotateY(${gamma}deg)`;
+  }
 }
 </script>
 
