@@ -115,7 +115,7 @@
       </div>
       <div v-if="notFound">
         <h1
-          class="absolute top-4 font-bebas w-full overflow-hidden text-neutral-700/70 text-[18vw] leading-[0.8]"
+          class="absolute pointer-events-none top-4 font-bebas w-full overflow-hidden text-neutral-700/70 text-[18vw] leading-[0.8] pt-32 md:pt-0"
           style="height: calc(100% - 32px);"
         >
           NOT FOUND!
