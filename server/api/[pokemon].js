@@ -204,12 +204,9 @@ export default defineEventHandler(async (event) => {
 
       rawCards = await tcgdex.card.list(query);
 
-      console.log(rawCards);
-
       if (!rawCards.length) {
         query = buildTCGDexQuery(responseName, true);
         rawCards = await tcgdex.card.list(query);
-        console.log(query, rawCards);
       }
 
       tradingCardsResponse = (rawCards ?? [])
