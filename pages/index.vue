@@ -1,11 +1,11 @@
 <template>
   <div
-    class="flex p-5 sm:p-6 w-screen h-screen transition-all duration-500 bg-gradient-to-tl bg-size-200 overflow-hidden"
+    class="fixed inset-0 w-screen h-[100dvh] flex p-5 sm:p-6 transition-all duration-500 bg-gradient-to-tl bg-size-200 overflow-hidden"
     :class="[ pokeColors[pokemon?.color ?? 'default'].gradient ]"
   >
     <div
       v-if="pokemon && pokemon.bgImage"
-      class="absolute intro-opac-30 inset-0 z-0 top-0 left-[-10rem] h-screen w-screen overflow-hidden opacity-30 blur-sm pointer-events-none"
+      class="absolute intro-opac-30 inset-0 z-0 top-0 left-[-10rem] h-[100dvh] w-screen overflow-hidden opacity-30 blur-sm pointer-events-none"
     >
       <img
         :src="pokemon.bgImage"

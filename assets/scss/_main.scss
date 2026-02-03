@@ -9,11 +9,16 @@
   font-family: "Saira Semi Condensed", sans-serif;
 }
 
-body {
-  min-height: 100vh;
-  min-width: 100vw;
-  background-color: #DEDEDE;
-  @extend .flex-center;
+html, body {
+  /* Prevent the body from being taller than the viewport */
+  height: 100dvh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  /* Disable pull-to-refresh and overscroll bounce */
+  overscroll-behavior: none;
+  position: fixed;
 }
 
 .flex-center {
