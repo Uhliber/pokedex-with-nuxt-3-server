@@ -73,9 +73,21 @@
           </p>
           <div>
             <Teleport to="body">
-              <HoloCardOverlay
+              <HoloCardOverlayIos
+                v-if="isIOS"
                 :show="showHoloCard && !!selectedHoloImage"
                 :card-image="selectedHoloImage?.images?.high"
+                :show-instructions="!userHasInteracted" 
+                @first-interaction="handleFirstInteraction"
+                @click-outside="handleHoloImageClose"
+              />
+
+              <HoloCardOverlay
+                v-else
+                :show="showHoloCard && !!selectedHoloImage"
+                :card-image="selectedHoloImage?.images?.high"
+                :show-instructions="!userHasInteracted" 
+                @first-interaction="handleFirstInteraction"
                 @click-outside="handleHoloImageClose"
               />
             </Teleport>
@@ -90,6 +102,7 @@
             :class="[ pokeColors[pokemon?.color ?? 'default'].dark ]"
           >
             Featured Cards
+            {{ ` Is IOS: ${isIOS}` }}
           </h1>
           <div class="flex justify-center gap-4 mt-8 sm:mt-0 sm:justify-normal">
             <img
@@ -134,6 +147,8 @@ const holoImages = ref(null);
 const showHoloCard = ref(false);
 const selectedHoloImage = ref(null);
 const errorMessage = ref('');
+const isIOS = ref(false);
+const userHasInteracted = ref(false);
 
 const pokeColors = {
   black: { default: 'bg-pokeblack', light: 'bg-pokeblack-light/50', gradient: 'from-pokeblack-dark via-neutral-700 to-neutral-900 bg-pos-100', dark: 'text-pokeblack-dark' },
@@ -150,6 +165,16 @@ const pokeColors = {
 };
 
 onMounted(async () => {
+  isIOS.value = [
+    'iPad Simulator',
+    'iPhone Simulator',
+    'iPod Simulator',
+    'iPad',
+    'iPhone',
+    'iPod',
+  ].includes(navigator.platform)
+  || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
+  
   await nextTick();
   searchRandom();
 });
@@ -210,5 +235,9 @@ function shuffleCards (array) {
   }
 
   return newArray;
+}
+
+function handleFirstInteraction () {
+  userHasInteracted.value = true;
 }
 </script>
