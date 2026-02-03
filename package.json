@@ -21,6 +21,7 @@
     "vue-router": "^4.2.5"
   },
   "dependencies": {
+    "@tcgdex/sdk": "^2.7.1",
     "sass": "^1.69.4",
     "tom-select": "^2.2.3"
   }

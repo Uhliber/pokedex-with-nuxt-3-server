@@ -1,3 +1,7 @@
+import TCGdex, { Query } from '@tcgdex/sdk';
+
+const tcgdex = new TCGdex('en');
+
 const cardRarityArray = [
   'Rare Holo VSTAR',
   'Rare Holo EX',
@@ -34,29 +38,21 @@ const cardRarityArray = [
 ];
 
 const customQuery = {
-  'farfetchd': 'farfetch*d',
-  'nidoran-f': 'nidoran%20evolvesTo:nidorina',
-  'nidoran-m': 'nidoran%20evolvesTo:nidorino',
-  'slowking': 'slowking%20-types:darkness',
-  'castform': (name) => {
+  farfetchd: 'farfetch*d',
+  'nidoran-f': 'nidoran evolvesTo:nidorina',
+  'nidoran-m': 'nidoran evolvesTo:nidorino',
+  slowking: 'slowking -types:darkness',
+  castform: (name) => {
     let nameNew = name;
-    switch (name) {
-      case 'castform-rainy':
-        nameNew = 'castform-rain';
-        break;
-      case 'castform-snowy':
-        nameNew = 'castform-snow';
-        break;
-    
-      default:
-        break;
+    if (name === 'castform-rainy') {
+      nameNew = 'castform-rain';
     }
-    
-    return `${reverseNameWithDash(nameNew)}`.replace('-', '*');
+    if (name === 'castform-snowy') {
+      nameNew = 'castform-snow';
+    }
+    return reverseNameWithDash(nameNew).replace('-', '*');
   },
-  'rotom': (name) => {
-    return `${reverseNameWithDash(name)}`.replace('-', '*');
-  },
+  rotom: (name) => reverseNameWithDash(name).replace('-', '*'),
 };
 
 const getSpecieDefault = [
@@ -71,116 +67,204 @@ const getSpecieDefault = [
   'meowstic-female',
 ];
 
+const ignoredSuffixes = ['altered'];
+
 const cardRarityOrder = {};
-
-const ignoredSuffixes = [
-  'altered',
-];
-
 cardRarityArray.forEach((value, index) => {
   cardRarityOrder[value] = index;
 });
 
 function reverseNameWithDash (name) {
-  if (name.includes('-')) {
-    const substrings = name.split('-');
-    const reversedString = substrings.reverse().join('-');
-    return reversedString;
-  } else {
+  if (!name.includes('-')) {
     return name;
   }
+  return name.split('-').reverse().join('-');
 }
 
-export default defineEventHandler(async event => {
+function buildTCGDexQuery (responseName, fill = false) {
+  let trimmed = responseName.trim();
+
+  if (fill) {
+    trimmed = trimmed.split('-')
+      .map(w => capitalize(w))
+      .join(' ');
+  }
+
+  const variantPrefixes = [
+    'Mega', 'Vmax', 'Galarian', 'Alolan', 'Black', 'White', 'Therian',
+    'Origin', 'Primal', 'Hisuian', 'Ice Rider', 'Crowned Sword', 'Amped', 'Stretchy',
+  ];
+
+  const isVariant = variantPrefixes.some(prefix => trimmed.startsWith(prefix));
+
+  if (isVariant || fill) {
+    const words = trimmed.split(' ').filter(Boolean);
+    let query = Query.create();
+    words.forEach(word => {
+      query = query.contains('name', capitalize(word));
+    });
+    return query.sort('localId', 'ASC').paginate(1, 50);
+  }
+
+  const equalName = trimmed
+    .split('-')
+    .map(w => capitalize(w))
+    .join(' ');
+
+  return Query.create().equal('name', equalName).sort('localId', 'ASC').paginate(1, 50);
+}
+
+function capitalize (str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+export default defineEventHandler(async (event) => {
   try {
     const { pokemon } = event.context.params;
-    const response = await $fetch(
-      `https://pokeapi.co/api/v2/pokemon/${pokemon}`,
-    );
+
+    let response;
+    try {
+      response = await $fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon}`);
+    } catch (err) {
+      throw createError({
+        statusCode: 502,
+        message: `Failed to fetch Pokémon data from PokeAPI: ${err.message}`,
+      });
+    }
 
     let responseName = response.name.toLowerCase();
     const specieName = response.species.name;
+
     let tradingCards = [];
     let tradingCardsResponse = [];
 
     if (specieName in customQuery) {
-      if (typeof customQuery[specieName] === 'function') {
-        const customQueryFunc = customQuery[specieName];
-        responseName = customQueryFunc(responseName);
-      } else {
-        responseName = customQuery[specieName];
-      }
+      responseName =
+        typeof customQuery[specieName] === 'function'
+          ? customQuery[specieName](responseName)
+          : customQuery[specieName];
     } else if (
-      ignoredSuffixes.some(ignore => responseName.includes(ignore))
-        || getSpecieDefault.some(p => responseName.includes(p))
-        || !response.is_default
+      ignoredSuffixes.some((i) => responseName.includes(i)) ||
+      getSpecieDefault.some((p) => responseName.includes(p)) ||
+      !response.is_default
     ) {
       responseName = response.species.name;
 
-      if (response.name.toLowerCase().includes('gmax')) {
-        responseName = `${responseName}*vmax`;
+      if (response.name.includes('gmax')) {
+        responseName = `${responseName} vmax`;
       }
-
-      if (response.name.toLowerCase().includes('mega')) {
-        responseName = `M*${responseName}`;
+      if (response.name.includes('mega')) {
+        responseName = `Mega ${responseName}`;
       }
-
-      if (response.name.toLowerCase().includes('galar')) {
-        responseName = `galarian*${responseName}*`;
+      if (response.name.includes('galar')) {
+        responseName = `Galarian ${responseName}`;
       }
-
-      if (response.name.toLowerCase().includes('alola')) {
-        responseName = `alolan*${responseName}*`;
+      if (response.name.includes('alola')) {
+        responseName = `Alolan ${responseName}`;
       }
-
-      if (response.name.toLowerCase().includes('black')) {
-        responseName = `black*${responseName}*`;
+      if (response.name.includes('black')) {
+        responseName = `Black ${responseName}`;
       }
-
-      if (response.name.toLowerCase().includes('white')) {
-        responseName = `white*${responseName}*`;
+      if (response.name.includes('white')) {
+        responseName = `White ${responseName}`;
       }
-
-    } else {
-      responseName = responseName.replace('-', '*');
-      responseName = `${responseName}%20-name:*vmax%20-name:galarian*`;
+      if (response.name.includes('therian')) {
+        responseName = `Therian ${responseName}`;
+      }
+      if (response.name.includes('origin')) {
+        responseName = `Origin ${responseName}`;
+      }
+      if (response.name.includes('primal')) {
+        responseName = `Primal ${responseName}`;
+      }
+      if (response.name.includes('hisuian')) {
+        responseName = `Hisuian ${responseName}`;
+      }
+      if (response.name.includes('ice rider')) {
+        responseName = `Ice Rider ${responseName}`;
+      }
+      if (response.name.includes('crowned sword')) {
+        responseName = `Crowned Sword ${responseName}`;
+      }
+      if (response.name.includes('amped')) {
+        responseName = `Amped ${responseName}`;
+      }
+      if (response.name.includes('stretchy')) {
+        responseName = `Stretchy ${responseName}`;
+      }
     }
 
-    const { data: cardResponse } = await $fetch(
-      `https://api.pokemontcg.io/v2/cards?q=name:${responseName}%20-rarity:Promo%20-rarity:Common%20-supertype:trainer%20-subtypes:tag&pageSize=100&select=id,name,rarity,images`,
-    );
+    // ---- TCGdex fetch (soft-fail) ----
 
-    if (cardResponse.length <= 3) {
-      const { data: cardResponseCommon } = await $fetch(
-        `https://api.pokemontcg.io/v2/cards?q=name:${responseName}%20&pageSize=100&select=id,name,rarity,images`,
-      );
-      tradingCards = cardResponseCommon;
-    } else {
-      tradingCardsResponse = cardResponse;
-      const hasRarityCards = tradingCardsResponse.filter(card => card.rarity !== undefined);
-        
-      const cardsNotStartingWithSearchTerm = hasRarityCards.filter(card => !card.name.toLowerCase().startsWith(responseName));
-      const cardsRegular = hasRarityCards.filter(card => card.name.toLowerCase().startsWith(responseName));
+    try {
+      let query;
+      let rawCards = [];
 
-      const sortedIrregularCards = cardsNotStartingWithSearchTerm.sort((a, b) => cardRarityOrder[a.rarity] - cardRarityOrder[b.rarity]) ?? [];
-      const sortedCards = cardsRegular.sort((a, b) => cardRarityOrder[a.rarity] - cardRarityOrder[b.rarity]) ?? [];
+      query = buildTCGDexQuery(responseName);
 
-      tradingCards = [
-        ...sortedCards,
-        ...sortedIrregularCards,
-      ];
+      rawCards = await tcgdex.card.list(query);
+
+      console.log(rawCards);
+
+      if (!rawCards.length) {
+        query = buildTCGDexQuery(responseName, true);
+        rawCards = await tcgdex.card.list(query);
+        console.log(query, rawCards);
+      }
+
+      tradingCardsResponse = (rawCards ?? [])
+        .map(card => {
+          const low = card?.getImageURL?.('low', 'webp');
+          const high = card?.getImageURL?.('high', 'png');
+
+          if (!low || !high || low.includes('undefined') || high.includes('undefined')) {
+            return null;
+          }
+
+          return {
+            id: card.id,
+            name: card.name,
+            rarity: card.rarity || undefined,
+            images: { low, high },
+          };
+        })
+        .filter(Boolean);
+
+    } catch (err) {
+      console.error('[TCGdex] card fetch failed:', {
+        pokemon: responseName,
+        message: err?.message || err,
+      });
+
+      tradingCardsResponse = [];
     }
 
+    tradingCards = tradingCardsResponse;
 
-    const speciesUrl = response.species.url;
-    const responseSpecie = await $fetch(speciesUrl);
-    const image = response.sprites.other['dream_world'].front_default ?? response.sprites.other['official-artwork'].front_default;
+    let responseSpecie;
+    try {
+      responseSpecie = await $fetch(response.species.url);
+    } catch (err) {
+      throw createError({
+        statusCode: 502,
+        message: `Failed to fetch Pokémon species info: ${err.message}`,
+      });
+    }
+
+    const image =
+      response.sprites.other.dream_world.front_default ??
+      response.sprites.other['official-artwork'].front_default;
+
     const fallbackImages = {
-      image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/132.svg',
-      bgImage: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/132.png',
-      sprite: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png',
+      image:
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/132.svg',
+      bgImage:
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/132.png',
+      sprite:
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png',
     };
-    const idealResponse = {
+
+    return {
       id: response.id,
       name: response.name,
       image: image ?? fallbackImages.image,
@@ -188,14 +272,12 @@ export default defineEventHandler(async event => {
       sprite: response.sprites.front_default ?? fallbackImages.sprite,
       color: responseSpecie.color.name,
       hasImage: image,
-      tradingCard: tradingCards,
+      tradingCard: Array.isArray(tradingCards) ? tradingCards : [],
     };
-
-    return idealResponse;
   } catch (error) {
     throw createError({
-      statusCode: 404,
-      message: 'Can\'t find the Pokemon!',
+      statusCode: error?.statusCode || 404,
+      message: error?.message || 'Can\'t find the Pokémon!',
     });
   }
 });

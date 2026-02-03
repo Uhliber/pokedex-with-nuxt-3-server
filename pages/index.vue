@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex p-5 sm:p-0 w-screen h-screen transition-all duration-500 bg-gradient-to-tl bg-size-200 overflow-hidden"
+    class="flex p-5 sm:p-6 w-screen h-screen transition-all duration-500 bg-gradient-to-tl bg-size-200 overflow-hidden"
     :class="[ pokeColors[pokemon?.color ?? 'default'].gradient ]"
   >
     <div
@@ -75,7 +75,7 @@
             <Teleport to="body">
               <HoloCardOverlay
                 :show="showHoloCard && !!selectedHoloImage"
-                :card-image="selectedHoloImage?.images?.large"
+                :card-image="selectedHoloImage?.images?.high"
                 @click-outside="handleHoloImageClose"
               />
             </Teleport>
@@ -96,7 +96,7 @@
               v-for="(holoImage, index) in holoImages"
               :key="holoImage.id"
               class="w-20 z-holo shadow-md rounded-sm floating-holo-card cursor-pointer sm:w-28"
-              :src="holoImage?.images?.small"
+              :src="holoImage?.images?.low"
               @click="handleHoloImageClick(holoImage)"
               :style="{'animation-delay': `${500 + (500 * (index + 1))}ms`}"
             >
@@ -133,6 +133,7 @@ const notFound = ref(false);
 const holoImages = ref(null);
 const showHoloCard = ref(false);
 const selectedHoloImage = ref(null);
+const errorMessage = ref('');
 
 const pokeColors = {
   black: { default: 'bg-pokeblack', light: 'bg-pokeblack-light/50', gradient: 'from-pokeblack-dark via-neutral-700 to-neutral-900 bg-pos-100', dark: 'text-pokeblack-dark' },
@@ -181,7 +182,9 @@ const searchPokemon = async () => {
     }
     pokemon.value = data.value;
   } catch (error) {
+    console.error(error);
     notFound.value = true;
+    errorMessage.value = error?.data?.message || error?.message || 'Unknown error';
   } finally {
     isSearching.value = false;
   }
