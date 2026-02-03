@@ -102,7 +102,6 @@
             :class="[ pokeColors[pokemon?.color ?? 'default'].dark ]"
           >
             Featured Cards
-            {{ ` Is IOS: ${isIOS}` }}
           </h1>
           <div class="flex justify-center gap-4 mt-8 sm:mt-0 sm:justify-normal">
             <img
