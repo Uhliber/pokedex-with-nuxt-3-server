@@ -59,12 +59,18 @@ const posLp = ref(0);
 const posTp = ref(0);
 const holoCard = ref(null);
 const isMobile = ref(false);
+const canHideInstructions = ref(false);
 
 watch(() => props.show, async (value) => {
   await nextTick();
   
   if (value) {
     isMobile.value = /Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    canHideInstructions.value = false;
+    setTimeout(() => {
+      canHideInstructions.value = true;
+    }, 1200);
 
     // Desktop Mouse Events
     holoCard.value.addEventListener('mousemove', handleMouseMoveEffect);
@@ -82,7 +88,7 @@ watch(() => props.show, async (value) => {
 });
 
 function triggerFirstInteraction () {
-  if (props.showInstructions) {
+  if (props.showInstructions && canHideInstructions.value) {
     emit('first-interaction');
   }
 }
@@ -127,9 +133,12 @@ const onCardMove = (ev) => {
 
 function handleOrientationChange (event) {
   if (event.beta !== null && event.gamma !== null) {
-    // Hide instructions if phone tilts significantly
-    if (Math.abs(event.beta - 40) > 8 || Math.abs(event.gamma) > 8) {
-      triggerFirstInteraction();
+    
+    if (canHideInstructions.value) {
+      const motionThreshold = 10;
+      if (Math.abs(event.beta - 40) > motionThreshold || Math.abs(event.gamma) > motionThreshold) {
+        triggerFirstInteraction();
+      }
     }
 
     const rawBeta = event.beta || 0;
